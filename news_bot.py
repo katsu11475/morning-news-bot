@@ -12,8 +12,8 @@ TOPICS = [
         "https://feeds.reuters.com/reuters/JPbusiness",
     ]),
     ("AI", [
-        "https://www.itmedia.co.jp/aiplus/rss/2.0/itmediaaiplus.xml",
-        "https://forest.watch.impress.co.jp/data/rss/1.0/ifw/feed.rdf",
+        "https://rss.itmedia.co.jp/rss/2.0/aiplus.xml",
+        "https://xtech.nikkei.com/rss/xtech-it.rdf",
         "https://wired.jp/feed/",
     ]),
     ("国内政治", [

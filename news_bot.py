@@ -6,22 +6,43 @@ from datetime import datetime, timezone, timedelta
 DISCORD_WEBHOOK = os.environ["DISCORD_WEBHOOK"]
 
 TOPICS = [
-    ("M&A・経済",   "https://news.google.com/rss/search?q=M%26A+買収+合併&hl=ja&gl=JP&ceid=JP:ja"),
-    ("AI",         "https://news.google.com/rss/search?q=AI+人工知能+生成AI&hl=ja&gl=JP&ceid=JP:ja"),
-    ("国内政治",    "https://news.google.com/rss/search?q=政治+国会+内閣&hl=ja&gl=JP&ceid=JP:ja"),
-    ("経済",       "https://news.google.com/rss/search?q=経済+景気+GDP&hl=ja&gl=JP&ceid=JP:ja"),
-    ("金融",       "https://news.google.com/rss/search?q=金融+日銀+金利+株価&hl=ja&gl=JP&ceid=JP:ja"),
+    ("M&A", [
+        "https://www.nikkei.com/rss/",
+        "https://jp.reuters.com/rssFeed/businessNews",
+    ]),
+    ("AI", [
+        "https://feeds.feedburner.com/techcrunchjapan",
+        "https://jp.reuters.com/rssFeed/technologyNews",
+    ]),
+    ("国内政治", [
+        "https://www3.nhk.or.jp/rss/news/cat4.xml",
+        "https://jp.reuters.com/rssFeed/domesticNews",
+    ]),
+    ("経済", [
+        "https://www3.nhk.or.jp/rss/news/cat5.xml",
+        "https://jp.reuters.com/rssFeed/businessNews",
+    ]),
+    ("金融", [
+        "https://www3.nhk.or.jp/rss/news/cat5.xml",
+        "https://jp.reuters.com/rssFeed/businessNews",
+    ]),
 ]
 
-def get_top_article(url):
-    res = requests.get(url, headers={"User-Agent": "Mozilla/5.0"})
-    root = ET.fromstring(res.content)
-    item = root.find(".//item")
-    if item is None:
-        return None
-    title = item.findtext("title") or "タイトルなし"
-    link  = item.findtext("link") or ""
-    return {"title": title, "url": link}
+def get_top_article(rss_urls):
+    headers = {"User-Agent": "Mozilla/5.0"}
+    for url in rss_urls:
+        try:
+            res = requests.get(url, headers=headers, timeout=5)
+            root = ET.fromstring(res.content)
+            item = root.find(".//item")
+            if item is not None:
+                title = item.findtext("title") or "タイトルなし"
+                link  = item.findtext("link") or ""
+                source = url.split("/")[2]
+                return {"title": title, "url": link, "source": source}
+        except Exception:
+            continue
+    return None
 
 def send_to_discord(items):
     jst = timezone(timedelta(hours=9))
@@ -32,7 +53,7 @@ def send_to_discord(items):
 
     for label, article in items:
         if article:
-            content += f"**【{label}】**\n"
+            content += f"**【{label}】** `{article['source']}`\n"
             content += f"📌 {article['title']}\n"
             content += f"🔗 {article['url']}\n\n"
         else:
@@ -43,5 +64,5 @@ def send_to_discord(items):
     print("Discord送信完了")
 
 if __name__ == "__main__":
-    items = [(label, get_top_article(url)) for label, url in TOPICS]
+    items = [(label, get_top_article(urls)) for label, urls in TOPICS]
     send_to_discord(items)

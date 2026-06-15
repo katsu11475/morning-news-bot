@@ -7,24 +7,26 @@ DISCORD_WEBHOOK = os.environ["DISCORD_WEBHOOK"]
 
 TOPICS = [
     ("M&A", [
-        "https://www.nikkei.com/rss/",
+        "https://maonline.jp/feed",
+        "https://toyokeizai.net/list/feed/rss",
         "https://jp.reuters.com/rssFeed/businessNews",
     ]),
     ("AI", [
-        "https://feeds.feedburner.com/techcrunchjapan",
-        "https://jp.reuters.com/rssFeed/technologyNews",
+        "https://www.itmedia.co.jp/news/rss/2.0/itmedianews.xml",
+        "https://www.zdnet.com/topic/artificial-intelligence/rss.xml",
+        "https://pc.watch.impress.co.jp/data/rss/1.0/pcw/feed.rdf",
     ]),
     ("国内政治", [
         "https://www3.nhk.or.jp/rss/news/cat4.xml",
-        "https://jp.reuters.com/rssFeed/domesticNews",
+        "https://www.asahi.com/rss/asahi/newsheadlines.rdf",
     ]),
     ("経済", [
-        "https://www3.nhk.or.jp/rss/news/cat5.xml",
         "https://jp.reuters.com/rssFeed/businessNews",
+        "https://www.bbc.com/japanese/topics/ckdxnx2s4gxt/rss.xml",
     ]),
     ("金融", [
-        "https://www3.nhk.or.jp/rss/news/cat5.xml",
         "https://jp.reuters.com/rssFeed/businessNews",
+        "https://www.bloomberg.co.jp/feeds/bbiz",
     ]),
 ]
 
@@ -38,7 +40,7 @@ def get_top_article(rss_urls):
             if item is not None:
                 title = item.findtext("title") or "タイトルなし"
                 link  = item.findtext("link") or ""
-                source = url.split("/")[2]
+                source = url.split("/")[2].replace("www.", "")
                 return {"title": title, "url": link, "source": source}
         except Exception:
             continue

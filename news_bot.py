@@ -21,12 +21,14 @@ TOPICS = [
         "https://www.asahi.com/rss/asahi/newsheadlines.rdf",
     ]),
     ("経済", [
-        "https://jp.reuters.com/rssFeed/businessNews",
-        "https://www.bbc.com/japanese/topics/ckdxnx2s4gxt/rss.xml",
+        "https://www3.nhk.or.jp/rss/news/cat4.xml",
+        "https://www.asahi.com/rss/asahi/newsheadlines.rdf",
+        "https://feeds.reuters.com/reuters/JPeconomics",
     ]),
     ("金融", [
-        "https://jp.reuters.com/rssFeed/businessNews",
-        "https://www.bloomberg.co.jp/feeds/bbiz",
+        "https://www3.nhk.or.jp/rss/news/cat5.xml",
+        "https://www.jiji.com/rss/ranking.rdf",
+        "https://feeds.reuters.com/reuters/JPbusiness",
     ]),
 ]
 

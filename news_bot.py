@@ -9,21 +9,21 @@ TOPICS = [
     ("M&A", [
         "https://maonline.jp/feed",
         "https://toyokeizai.net/list/feed/rss",
-        "https://jp.reuters.com/rssFeed/businessNews",
+        "https://feeds.reuters.com/reuters/JPbusiness",
     ]),
     ("AI", [
         "https://www.itmedia.co.jp/news/rss/2.0/itmedianews.xml",
-        "https://www.zdnet.com/topic/artificial-intelligence/rss.xml",
         "https://pc.watch.impress.co.jp/data/rss/1.0/pcw/feed.rdf",
+        "https://wired.jp/feed/",
     ]),
     ("国内政治", [
         "https://www3.nhk.or.jp/rss/news/cat4.xml",
         "https://www.asahi.com/rss/asahi/newsheadlines.rdf",
     ]),
     ("経済", [
-        "https://www3.nhk.or.jp/rss/news/cat4.xml",
-        "https://www.asahi.com/rss/asahi/newsheadlines.rdf",
+        "https://toyokeizai.net/list/feed/rss",
         "https://feeds.reuters.com/reuters/JPeconomics",
+        "https://www.asahi.com/rss/asahi/newsheadlines.rdf",
     ]),
     ("金融", [
         "https://www3.nhk.or.jp/rss/news/cat5.xml",
@@ -32,18 +32,19 @@ TOPICS = [
     ]),
 ]
 
-def get_top_article(rss_urls):
+def get_top_article(rss_urls, used_urls):
     headers = {"User-Agent": "Mozilla/5.0"}
     for url in rss_urls:
         try:
             res = requests.get(url, headers=headers, timeout=5)
             root = ET.fromstring(res.content)
-            item = root.find(".//item")
-            if item is not None:
+            for item in root.findall(".//item"):
                 title = item.findtext("title") or "タイトルなし"
                 link  = item.findtext("link") or ""
-                source = url.split("/")[2].replace("www.", "")
-                return {"title": title, "url": link, "source": source}
+                if link and link not in used_urls:
+                    used_urls.add(link)
+                    source = url.split("/")[2].replace("www.", "")
+                    return {"title": title, "url": link, "source": source}
         except Exception:
             continue
     return None
@@ -68,5 +69,6 @@ def send_to_discord(items):
     print("Discord送信完了")
 
 if __name__ == "__main__":
-    items = [(label, get_top_article(urls)) for label, urls in TOPICS]
+    used_urls = set()
+    items = [(label, get_top_article(urls, used_urls)) for label, urls in TOPICS]
     send_to_discord(items)

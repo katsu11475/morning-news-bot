@@ -1,0 +1,27 @@
+name: Morning News Bot
+
+on:
+  schedule:
+    - cron: "0 23 * * *"  # UTC 23:00 = JST 翌8:00
+  workflow_dispatch:       # 手動実行用（テストに使う）
+
+jobs:
+  send-news:
+    runs-on: ubuntu-latest
+    steps:
+      - name: リポジトリをチェックアウト
+        uses: actions/checkout@v3å
+
+      - name: Pythonセットアップ
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: 依存パッケージをインストール
+        run: pip install requests
+
+      - name: ニュースを取得してDiscordに送信
+        run: python news_bot.py
+        env:
+          NEWSAPI_KEY: ${{ secrets.NEWSAPI_KEY }}
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}

@@ -1,30 +1,27 @@
 import os
 import requests
+import xml.etree.ElementTree as ET
 from datetime import datetime, timezone, timedelta
 
-NEWSAPI_KEY = os.environ["NEWSAPI_KEY"]
 DISCORD_WEBHOOK = os.environ["DISCORD_WEBHOOK"]
 
 TOPICS = [
-    ("M&A", 'M&A OR 買収 OR 合併'),
-    ("AI", 'AI OR 人工知能 OR 生成AI'),
-    ("国内政治", '政治 OR 国会 OR 内閣'),
-    ("経済", '経済 OR GDP OR 景気'),
-    ("金融", '金融 OR 日銀 OR 金利 OR 株価'),
+    ("M&A・経済",   "https://news.google.com/rss/search?q=M%26A+買収+合併&hl=ja&gl=JP&ceid=JP:ja"),
+    ("AI",         "https://news.google.com/rss/search?q=AI+人工知能+生成AI&hl=ja&gl=JP&ceid=JP:ja"),
+    ("国内政治",    "https://news.google.com/rss/search?q=政治+国会+内閣&hl=ja&gl=JP&ceid=JP:ja"),
+    ("経済",       "https://news.google.com/rss/search?q=経済+景気+GDP&hl=ja&gl=JP&ceid=JP:ja"),
+    ("金融",       "https://news.google.com/rss/search?q=金融+日銀+金利+株価&hl=ja&gl=JP&ceid=JP:ja"),
 ]
 
-def get_top_article(query):
-    url = "https://newsapi.org/v2/everything"
-    params = {
-        "q": query,
-        "language": "ja",
-        "sortBy": "publishedAt",
-        "pageSize": 1,
-        "apiKey": NEWSAPI_KEY,
-    }
-    res = requests.get(url, params=params)
-    articles = res.json().get("articles", [])
-    return articles[0] if articles else None
+def get_top_article(url):
+    res = requests.get(url, headers={"User-Agent": "Mozilla/5.0"})
+    root = ET.fromstring(res.content)
+    item = root.find(".//item")
+    if item is None:
+        return None
+    title = item.findtext("title") or "タイトルなし"
+    link  = item.findtext("link") or ""
+    return {"title": title, "url": link}
 
 def send_to_discord(items):
     jst = timezone(timedelta(hours=9))
@@ -35,25 +32,16 @@ def send_to_discord(items):
 
     for label, article in items:
         if article:
-            title = article.get("title", "タイトルなし")
-            description = article.get("description") or "説明なし"
-            url = article.get("url", "")
             content += f"**【{label}】**\n"
-            content += f"📌 {title}\n"
-            content += f"{description[:100]}{'...' if len(description) > 100 else ''}\n"
-            content += f"🔗 {url}\n\n"
+            content += f"📌 {article['title']}\n"
+            content += f"🔗 {article['url']}\n\n"
         else:
-            content += f"**【{label}】**\n"
-            content += "⚠️ 記事が取得できませんでした\n\n"
+            content += f"**【{label}】**\n⚠️ 記事が取得できませんでした\n\n"
 
     content += "━━━━━━━━━━━━━━━━━━━━"
-
     requests.post(DISCORD_WEBHOOK, json={"content": content})
     print("Discord送信完了")
 
 if __name__ == "__main__":
-    items = []
-    for label, query in TOPICS:
-        article = get_top_article(query)
-        items.append((label, article))
+    items = [(label, get_top_article(url)) for label, url in TOPICS]
     send_to_discord(items)

@@ -1,0 +1,26 @@
+name: Notion Task Reschedule
+
+on:
+  schedule:
+    - cron: "0 16 * * *"  # UTC 16:00 = JST 翌1:00
+  workflow_dispatch:       # 手動実行用（テストに使う）
+
+jobs:
+  reschedule-tasks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: リポジトリをチェックアウト
+        uses: actions/checkout@v4
+
+      - name: Pythonセットアップ
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: 依存パッケージをインストール
+        run: pip install requests
+
+      - name: 期限切れタスクをリスケ
+        run: python notion_reschedule.py
+        env:
+          NOTION_API_KEY: ${{ secrets.NOTION_API_KEY }}
